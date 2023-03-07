@@ -1,4 +1,4 @@
-/* fieldset{
+fieldset{
     display: flex;
     gap: 8vw;
     width: fit-content;
@@ -113,4 +113,4 @@ li.signal[displaynone='']::before{
     position: absolute;
     white-space: nowrap;
     width: 1px;
-  } */
+  }
