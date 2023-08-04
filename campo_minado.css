@@ -1,9 +1,9 @@
 fieldset{
     display: flex;
-    gap: 8vw;
+    gap: 50px;
     width: fit-content;
     margin: 0;
-    padding: 4vw 8vw;
+    padding: 20px 50px;
     border: 0;
     background-color: white;
     border-radius: 0 0 10px 10px;
@@ -16,8 +16,8 @@ input[type="radio"]{
 
 input[type="radio"]{
     appearance: none;
-    width: 3vw;
-    height: 3vw;
+    width: 15px;
+    height: 15px;
     outline: 3px solid var(--radio-color, currentColor);
     outline-offset: 3px;
     border-radius: 50%;
@@ -97,9 +97,16 @@ li[displaynone='']::before{
     height: 100%;
 }
 
+li:not(.open){
+    cursor: pointer;
+}
+
 li.signal[displaynone='']::before{
     content: '';
-    background-color: rgb(203, 244, 0);
+    background-image: url('/assets/flag-icon.svg');
+    background-position: center;
+    background-size: 60%;
+    background-repeat: no-repeat;
     position: absolute;
     width: 100%;
     height: 100%;

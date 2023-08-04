@@ -24,34 +24,73 @@ let regexRight = /\d?[9]$/
 let regexLeft = /\d?[0]$/
 let createdZones = []
 let columns = 0
+let houseOpens = 0
+let openedAreas = []
 
 const $radioBtns = document.querySelector('fieldset')
 console.log($radioBtns.firstElementChild)
 
 let savedTheme = localStorage.getItem('theme')
-if(!savedTheme){
+if (!savedTheme) {
     $radioBtns.querySelector('input').checked = true
-} else{
+} else {
     applyTheme(savedTheme)
 }
 
 
 $radioBtns.addEventListener('click', e => {
-    if(e.target.nodeName == 'INPUT'){
-        localStorage.setItem('theme',e.target.getAttribute('id'))
+    if (e.target.nodeName == 'INPUT') {
+        localStorage.setItem('theme', e.target.getAttribute('id'))
     }
 })
 
-function applyTheme(theme){
+function applyTheme(theme) {
     $radioBtns.querySelector(`#${savedTheme}`).checked = true
 }
 
 let lastSize = sessionStorage.getItem('lastSize')
 lastSize ? $size.value = lastSize : ''
 
-$initBoard.addEventListener('submit',function(e){
+$initBoard.addEventListener('submit', function (e) {
 
     e.preventDefault()
+    createBoard()
+
+    sessionStorage.setItem('lastSize', size)
+})
+
+$board.addEventListener('click', e => {
+    const elem = e.target
+    console.log(elem)
+    if (elem.getAttribute('bomb') == '') {
+        elem.removeAttribute('displaynone')
+
+        setTimeout(() => {
+            if (window.confirm('VOCÊ PERDEU!!!')) {
+                createBoard()
+            }
+        }, 200)
+    } else if(!e.target.classList.contains('open')){
+        let area = elem.getAttribute('area')
+
+        if (area !== '' && !openedAreas.includes(area)) {
+            openedAreas.push(area)
+            openArea(area)
+        } else {
+            elem.classList.add('open')
+            elem.removeAttribute('displaynone')
+        }
+    }
+    checkWin()
+})
+
+$board.addEventListener('contextmenu', e => {
+    e.target.classList.toggle('signal')
+    e.preventDefault()
+    checkWin()
+})
+
+function createBoard() {
     size = parseInt($size.value)
     qtdBomb = 0
     boardObj = {}
@@ -64,48 +103,7 @@ $initBoard.addEventListener('submit',function(e){
     middleIdx = []
     cornersIdx = []
     createdZones = []
-    createBoard()
 
-    let houseOpens = 0
-
-    sessionStorage.setItem('lastSize', size)
-
-    $board.addEventListener('click', e => {
-        const elem = e.target
-        if(elem.getAttribute('bomb')==''){
-            elem.removeAttribute('displaynone')
-
-            setTimeout(() => {
-                if(window.confirm('VOCÊ PERDEU!!!')){
-                    location.reload()
-                }
-            },200)
-        } else {
-            houseOpens++
-            let area = elem.getAttribute('area')
-
-            if(area !== ''){
-                openArea(area)
-            } else {
-                console.log(elem)
-                console.log(elem.classList)
-                elem.classList.toggle('open')
-                console.log(elem.classList)
-                elem.removeAttribute('displaynone')
-            }   
-        }
-        checkWin()
-    })
-    
-    $board.addEventListener('contextmenu', e => {
-        e.target.classList.toggle('signal')
-        e.preventDefault()
-        checkWin()
-    })
-
-})
-
-function createBoard(){
     const board = document.querySelector('.board')
     board.innerHTML = ''
     columns = Math.sqrt(size)
@@ -119,56 +117,55 @@ function createBoard(){
     renderBoard()
 }
 
-
-function bombDistribution(){
+function bombDistribution() {
     let i = 0
-    
-    while (qtdBomb < (size / 10 )){
-        if(boardObj[i] == undefined || boardObj[i] == 0 || boardObj[i] !== 'B'){
-            let bomb = Math.round(Math.random()*10)
-            if (bomb == 1 ){
+
+    while (qtdBomb < (size / 10)) {
+        if (boardObj[i] == undefined || boardObj[i] == 0 || boardObj[i] !== 'B') {
+            let bomb = Math.round(Math.random() * 10)
+            if (bomb == 1) {
                 boardObj[i] = 'B'
                 qtdBomb++
             } else {
                 boardObj[i] = ''
             }
         }
-        
+
         i == size - 1 ? i = 0 : i++
     }
 }
 
-function renderBoard(){
+function renderBoard() {
     $board.setAttribute('style', `
     display: grid;
     grid-template-columns: repeat(${columns}, 1fr);
     grid-template-rows: repeat(${columns}, 1fr)
     `)
     let qtdRows = 0
-    
-    for(let i = 0; i < size; i++){
-        
+
+    for (let i = 0; i < size; i++) {
+
         const value = boardObj[i]
         const house = document.createElement('li')
         let color = ''
 
-        
+
 
         house.setAttribute('id', i)
         house.setAttribute('displayNone', '')
         house.setAttribute('area', neutralZones[i] || '')
         house.classList.toggle('house')
-       
-        if(value == ''){
+
+        if (value == '') {
             house.classList.toggle('neutral')
-        } else if(value == 'B'){
-            house.setAttribute('bomb','')
+        } else if (value == 'B') {
+            house.setAttribute('bomb', '')
         } else {
-            switch(value){
+            switch (value) {
                 case 1:
                     color = '#1D007F';
                     break;
-                case 2: 
+                case 2:
                     color = '#7400C4';
                     break;
                 case 3:
@@ -190,180 +187,180 @@ function renderBoard(){
         house.textContent = value == '' ? '' : value
         $board.appendChild(house)
 
-        
-        if (color != ''){
+
+        if (color != '') {
             house.setAttribute('style', `color: ${color}`)
         }
     }
 
 }
 
-function bombsIndicator(){
+function bombsIndicator() {
     let qtdBomb = 0
     const bordas = {
-        top: function(i){
+        top: function (i) {
             qtdBomb = 0
-            if(boardObj[i - 1] == 'B'){qtdBomb++}
-            if(boardObj[i + 1] == 'B'){qtdBomb++}
-            if(boardObj[i + columns - 1] == 'B'){qtdBomb++}
-            if(boardObj[i + columns] == 'B'){qtdBomb++}
-            if(boardObj[i + columns + 1] == 'B'){qtdBomb++}
+            if (boardObj[i - 1] == 'B') { qtdBomb++ }
+            if (boardObj[i + 1] == 'B') { qtdBomb++ }
+            if (boardObj[i + columns - 1] == 'B') { qtdBomb++ }
+            if (boardObj[i + columns] == 'B') { qtdBomb++ }
+            if (boardObj[i + columns + 1] == 'B') { qtdBomb++ }
 
-            if(qtdBomb !== 0){
+            if (qtdBomb !== 0) {
                 boardObj[i] = qtdBomb
                 bombsIndicators.push(i)
-            } else{
+            } else {
                 boardObj[i] = ''
             }
 
         },
-        bottom: function(i){
+        bottom: function (i) {
             qtdBomb = 0
-            if(boardObj[i - 1] == 'B'){qtdBomb++}
-            if(boardObj[i + 1] == 'B'){qtdBomb++}
-            if(boardObj[i - columns - 1] == 'B'){qtdBomb++}
-            if(boardObj[i - columns] == 'B'){qtdBomb++}
-            if(boardObj[i - columns + 1] == 'B'){qtdBomb++}
-            
-            if(qtdBomb !== 0){
+            if (boardObj[i - 1] == 'B') { qtdBomb++ }
+            if (boardObj[i + 1] == 'B') { qtdBomb++ }
+            if (boardObj[i - columns - 1] == 'B') { qtdBomb++ }
+            if (boardObj[i - columns] == 'B') { qtdBomb++ }
+            if (boardObj[i - columns + 1] == 'B') { qtdBomb++ }
+
+            if (qtdBomb !== 0) {
                 boardObj[i] = qtdBomb
                 bombsIndicators.push(i)
-            } else{
+            } else {
                 boardObj[i] = ''
             }
         },
-        right: function(i){
+        right: function (i) {
             qtdBomb = 0
-            if(boardObj[i - columns - 1] == 'B'){qtdBomb++}
-            if(boardObj[i - columns] == 'B'){qtdBomb++}
-            if(boardObj[i - 1] == 'B'){qtdBomb++}
-            if(boardObj[i + columns] == 'B'){qtdBomb++}
-            if(boardObj[i + columns - 1] == 'B'){qtdBomb++}
+            if (boardObj[i - columns - 1] == 'B') { qtdBomb++ }
+            if (boardObj[i - columns] == 'B') { qtdBomb++ }
+            if (boardObj[i - 1] == 'B') { qtdBomb++ }
+            if (boardObj[i + columns] == 'B') { qtdBomb++ }
+            if (boardObj[i + columns - 1] == 'B') { qtdBomb++ }
 
-            if(qtdBomb !== 0){
+            if (qtdBomb !== 0) {
                 boardObj[i] = qtdBomb
                 bombsIndicators.push(i)
-            } else{
+            } else {
                 boardObj[i] = ''
             }
 
         },
 
-        left: function(i){
+        left: function (i) {
             qtdBomb = 0
-            if(boardObj[i - columns + 1] == 'B'){qtdBomb++}
-            if(boardObj[i - columns] == 'B'){qtdBomb++}
-            if(boardObj[i + 1] == 'B'){qtdBomb++}
-            if(boardObj[i + columns] == 'B'){qtdBomb++}
-            if(boardObj[i + columns + 1] == 'B'){qtdBomb++}
+            if (boardObj[i - columns + 1] == 'B') { qtdBomb++ }
+            if (boardObj[i - columns] == 'B') { qtdBomb++ }
+            if (boardObj[i + 1] == 'B') { qtdBomb++ }
+            if (boardObj[i + columns] == 'B') { qtdBomb++ }
+            if (boardObj[i + columns + 1] == 'B') { qtdBomb++ }
 
-            if(qtdBomb !== 0){
+            if (qtdBomb !== 0) {
                 boardObj[i] = qtdBomb
                 bombsIndicators.push(i)
-            } else{
+            } else {
                 boardObj[i] = ''
             }
         }
     }
 
     const corners = {
-        topLeft : (i) => {
+        topLeft: (i) => {
             qtdBomb = 0
-            if(boardObj[1] == 'B'){qtdBomb++}
-            if(boardObj[columns] == 'B'){qtdBomb++}
-            if(boardObj[columns + 1] == 'B'){qtdBomb++}
-            
-            if(qtdBomb !== 0){
+            if (boardObj[1] == 'B') { qtdBomb++ }
+            if (boardObj[columns] == 'B') { qtdBomb++ }
+            if (boardObj[columns + 1] == 'B') { qtdBomb++ }
+
+            if (qtdBomb !== 0) {
                 boardObj[i] = qtdBomb
                 bombsIndicators.push(i)
-            } else{
+            } else {
                 boardObj[i] = ''
             }
 
         },
-        topRight : (i) => {
+        topRight: (i) => {
             qtdBomb = 0
-            if(boardObj[columns - 2] == 'B'){qtdBomb++}
-            if(boardObj[columns + columns - 2] == 'B'){qtdBomb++}
-            if(boardObj[columns + columns - 1] == 'B'){qtdBomb++}
+            if (boardObj[columns - 2] == 'B') { qtdBomb++ }
+            if (boardObj[columns + columns - 2] == 'B') { qtdBomb++ }
+            if (boardObj[columns + columns - 1] == 'B') { qtdBomb++ }
 
-            if(qtdBomb !== 0){
+            if (qtdBomb !== 0) {
                 boardObj[i] = qtdBomb
                 bombsIndicators.push(i)
-            } else{
+            } else {
                 boardObj[i] = ''
             }
         },
-        bottomLeft : (i) => {
+        bottomLeft: (i) => {
             qtdBomb = 0
-            if(boardObj[size - columns + 1] == 'B'){qtdBomb++}
-            if(boardObj[size - columns - columns] == 'B'){qtdBomb++}
-            if(boardObj[size - columns - columns + 1] == 'B'){qtdBomb++}
+            if (boardObj[size - columns + 1] == 'B') { qtdBomb++ }
+            if (boardObj[size - columns - columns] == 'B') { qtdBomb++ }
+            if (boardObj[size - columns - columns + 1] == 'B') { qtdBomb++ }
 
-            if(qtdBomb !== 0){
+            if (qtdBomb !== 0) {
                 boardObj[i] = qtdBomb
                 bombsIndicators.push(i)
-            } else{
+            } else {
                 boardObj[i] = ''
             }
         },
-        bottomRight : (i) => {
+        bottomRight: (i) => {
             qtdBomb = 0
-            if(boardObj[size - 1 - 1] == 'B'){qtdBomb++}
-            if(boardObj[size - 1 - columns] == 'B'){qtdBomb++}
-            if(boardObj[size - 1 - columns - 1] == 'B'){qtdBomb++}
+            if (boardObj[size - 1 - 1] == 'B') { qtdBomb++ }
+            if (boardObj[size - 1 - columns] == 'B') { qtdBomb++ }
+            if (boardObj[size - 1 - columns - 1] == 'B') { qtdBomb++ }
 
-            if(qtdBomb !== 0){
+            if (qtdBomb !== 0) {
                 boardObj[i] = qtdBomb
                 bombsIndicators.push(i)
-            } else{
+            } else {
                 boardObj[i] = ''
             }
         }
 
     }
 
-    for(let i = 0; i < size; i++){
-        if (!cornersIdx.includes(i)){
-            if(1 <= i && i < columns - 1 && boardObj[i] !== 'B'){
+    for (let i = 0; i < size; i++) {
+        if (!cornersIdx.includes(i)) {
+            if (1 <= i && i < columns - 1 && boardObj[i] !== 'B') {
                 bordas.top(i)
                 topIdx.push(i)
-            } else if(size - columns < i && i < size - 1 && boardObj[i] !== 'B'){
+            } else if (size - columns < i && i < size - 1 && boardObj[i] !== 'B') {
                 bordas.bottom(i)
                 bottomIdx.push(i)
-            } else if(i % columns == (columns - 1) && boardObj[i] !== 'B'){
+            } else if (i % columns == (columns - 1) && boardObj[i] !== 'B') {
                 bordas.right(i)
                 rightIdx.push(i)
-            } else if((i % columns == 0) && boardObj[i] !== 'B'){
+            } else if ((i % columns == 0) && boardObj[i] !== 'B') {
                 bordas.left(i)
                 leftIdx.push(i)
             } else {
-                if(boardObj[i] !== 'B'){
+                if (boardObj[i] !== 'B') {
                     let qtdBomb = 0
-        
-                    if(boardObj[i - columns - 1] == 'B'){ qtdBomb++}
-                    if(boardObj[i - columns] == 'B'){ qtdBomb++}
-                    if(boardObj[i - columns + 1] == 'B'){ qtdBomb++}
-            
-                    if(boardObj[i - 1] == 'B'){ qtdBomb++}
-                    if(boardObj[i + 1] == 'B'){ qtdBomb++}
-            
-                    if(boardObj[i + columns - 1] == 'B'){ qtdBomb++}
-                    if(boardObj[i + columns] == 'B'){ qtdBomb++}
-                    if(boardObj[i + columns + 1] == 'B'){ qtdBomb++}
-        
-                    if(qtdBomb !== 0){
+
+                    if (boardObj[i - columns - 1] == 'B') { qtdBomb++ }
+                    if (boardObj[i - columns] == 'B') { qtdBomb++ }
+                    if (boardObj[i - columns + 1] == 'B') { qtdBomb++ }
+
+                    if (boardObj[i - 1] == 'B') { qtdBomb++ }
+                    if (boardObj[i + 1] == 'B') { qtdBomb++ }
+
+                    if (boardObj[i + columns - 1] == 'B') { qtdBomb++ }
+                    if (boardObj[i + columns] == 'B') { qtdBomb++ }
+                    if (boardObj[i + columns + 1] == 'B') { qtdBomb++ }
+
+                    if (qtdBomb !== 0) {
                         boardObj[i] = qtdBomb
                         bombsIndicators.push(i)
-                    } else{
+                    } else {
                         boardObj[i] = ''
                     }
                     middleIdx.push(i)
                 }
             }
-        } else if (cornersIdx.includes(i)){
-            switch (i){
-                case 0: 
+        } else if (cornersIdx.includes(i)) {
+            switch (i) {
+                case 0:
                     corners.topLeft(i)
                     break
                 case (columns - 1):
@@ -378,259 +375,259 @@ function bombsIndicator(){
                 default:
                     console.log('não existe esse caso')
             }
-        } 
+        }
     }
 }
 
-function checkNeutralZones(){
+function checkNeutralZones() {
     const bordas = {
-        top: function(i){
+        top: function (i) {
             let five = neutralZones[i] || maxZone
             let arrChanges = []
             let neutralsHouseAround = 0
 
             let around = {
-                four : neutralZones[i - 1],
-                six : neutralZones[i + 1],
-                eight : neutralZones[i + columns]
+                four: neutralZones[i - 1],
+                six: neutralZones[i + 1],
+                eight: neutralZones[i + columns]
             }
 
-            for(const property in around){
-                if(around[property]){
+            for (const property in around) {
+                if (around[property]) {
                     neutralsHouseAround++
-                    if(around[property] < five){
+                    if (around[property] < five) {
                         five = around[property]
                         arrChanges.push(five)
-                    } else if(around[property] > five){
+                    } else if (around[property] > five) {
                         arrChanges.push(around[property])
-                    } 
+                    }
                 }
             }
-            if(neutralsHouseAround == 0){maxZone++}
+            if (neutralsHouseAround == 0) { maxZone++ }
             neutralZones[i] = five
 
-            if(arrChanges.length !== 0){
-                changeZone(five,arrChanges)
+            if (arrChanges.length !== 0) {
+                changeZone(five, arrChanges)
             }
 
         },
-        bottom: function(i){
+        bottom: function (i) {
             let five = neutralZones[i] || maxZone
             let arrChanges = []
             let neutralsHouseAround = 0
 
             let around = {
-                two : neutralZones[i - columns],
-                four : neutralZones[i - 1],
-                six : neutralZones[i + 1]
+                two: neutralZones[i - columns],
+                four: neutralZones[i - 1],
+                six: neutralZones[i + 1]
             }
 
-            for(const property in around){
-                if(around[property]){
+            for (const property in around) {
+                if (around[property]) {
                     neutralsHouseAround++
-                    if(around[property] < five){
+                    if (around[property] < five) {
                         five = around[property]
                         arrChanges.push(five)
-                    } else if(around[property] > five){
+                    } else if (around[property] > five) {
                         arrChanges.push(around[property])
-                    } 
+                    }
                 }
             }
-            if(neutralsHouseAround == 0){maxZone++}
+            if (neutralsHouseAround == 0) { maxZone++ }
             neutralZones[i] = five
-            if(arrChanges.length !== 0){
-                changeZone(five,arrChanges)
+            if (arrChanges.length !== 0) {
+                changeZone(five, arrChanges)
             }
 
         },
-        right: function(i){
+        right: function (i) {
             let five = neutralZones[i] || maxZone
             let arrChanges = []
             let neutralsHouseAround = 0
 
             let around = {
-                two : neutralZones[i - columns],
-                four : neutralZones[i - 1],
-                eight : neutralZones[i + columns]
+                two: neutralZones[i - columns],
+                four: neutralZones[i - 1],
+                eight: neutralZones[i + columns]
             }
 
-            for(const property in around){
-                if(around[property]){
+            for (const property in around) {
+                if (around[property]) {
                     neutralsHouseAround++
-                    if(around[property] < five){
+                    if (around[property] < five) {
                         five = around[property]
                         arrChanges.push(five)
-                    } else if(around[property] > five){
+                    } else if (around[property] > five) {
                         arrChanges.push(around[property])
-                    } 
+                    }
                 }
             }
-            if(neutralsHouseAround == 0){maxZone++}
+            if (neutralsHouseAround == 0) { maxZone++ }
             neutralZones[i] = five
-            if(arrChanges.length !== 0){
-                changeZone(five,arrChanges)
+            if (arrChanges.length !== 0) {
+                changeZone(five, arrChanges)
             }
         },
 
-        left: function(i){
+        left: function (i) {
             let five = neutralZones[i] || maxZone
             let arrChanges = []
             let neutralsHouseAround = 0
 
             let around = {
-                two : neutralZones[i - columns],
-                six : neutralZones[i + 1],
-                eight : neutralZones[i + columns]
+                two: neutralZones[i - columns],
+                six: neutralZones[i + 1],
+                eight: neutralZones[i + columns]
             }
 
-            for(const property in around){
-                if(around[property]){
+            for (const property in around) {
+                if (around[property]) {
                     neutralsHouseAround++
-                    if(around[property] < five){
+                    if (around[property] < five) {
                         five = around[property]
                         arrChanges.push(five)
-                    } else if(around[property] > five){
+                    } else if (around[property] > five) {
                         arrChanges.push(around[property])
-                    } 
+                    }
                 }
             }
-            if(neutralsHouseAround == 0){maxZone++}
+            if (neutralsHouseAround == 0) { maxZone++ }
             neutralZones[i] = five
-            if(arrChanges.length !== 0){
-                changeZone(five,arrChanges)
+            if (arrChanges.length !== 0) {
+                changeZone(five, arrChanges)
             }
         }
     }
 
     const corners = {
-        topLeft : (i) => {
-            let five = neutralZones[i] || maxZone
-            let arrChanges = []
-            let neutralsHouseAround = 0 
-
-            let around = {
-                six : neutralZones[i + 1],
-                eight : neutralZones[i + columns]
-            }
-
-
-            for(const property in around){
-                if(around[property]){
-                    neutralsHouseAround++
-                    if(around[property] < five){
-                        five = around[property]
-                        arrChanges.push(five)
-                    } else if(around[property] > five){
-                        arrChanges.push(around[property])
-                    } 
-                }
-            }
-            if(neutralsHouseAround == 0){maxZone++}
-            neutralZones[i] = five
-            
-            if(arrChanges.length !== 0){
-                changeZone(five,arrChanges)
-            }
-
-        },
-        topRight : (i) => {
+        topLeft: (i) => {
             let five = neutralZones[i] || maxZone
             let arrChanges = []
             let neutralsHouseAround = 0
-            
+
             let around = {
-                four : neutralZones[i - 1],
-                eight : neutralZones[i + columns]
+                six: neutralZones[i + 1],
+                eight: neutralZones[i + columns]
             }
 
-            for(const property in around){
-                if(around[property]){
+
+            for (const property in around) {
+                if (around[property]) {
                     neutralsHouseAround++
-                    if(around[property] < five){
+                    if (around[property] < five) {
                         five = around[property]
                         arrChanges.push(five)
-                    } else if(around[property] > five){
+                    } else if (around[property] > five) {
                         arrChanges.push(around[property])
-                    } 
+                    }
                 }
             }
-            if(neutralsHouseAround == 0){maxZone++}
+            if (neutralsHouseAround == 0) { maxZone++ }
             neutralZones[i] = five
-            
-            if(arrChanges.length !== 0){
-                changeZone(five,arrChanges)
+
+            if (arrChanges.length !== 0) {
+                changeZone(five, arrChanges)
             }
+
         },
-        bottomLeft : (i) => {
+        topRight: (i) => {
             let five = neutralZones[i] || maxZone
             let arrChanges = []
             let neutralsHouseAround = 0
-            
+
             let around = {
-                two : neutralZones[i - columns],
-                six : neutralZones[i + 1]
+                four: neutralZones[i - 1],
+                eight: neutralZones[i + columns]
             }
 
-            for(const property in around){
-                if(around[property]){
+            for (const property in around) {
+                if (around[property]) {
                     neutralsHouseAround++
-                    if(around[property] < five){
+                    if (around[property] < five) {
                         five = around[property]
                         arrChanges.push(five)
-                    } else if(around[property] > five){
+                    } else if (around[property] > five) {
                         arrChanges.push(around[property])
-                    } 
+                    }
                 }
             }
-            if(neutralsHouseAround == 0){maxZone++}
+            if (neutralsHouseAround == 0) { maxZone++ }
             neutralZones[i] = five
-            if(arrChanges.length !== 0){
-                changeZone(five,arrChanges)
+
+            if (arrChanges.length !== 0) {
+                changeZone(five, arrChanges)
             }
         },
-        bottomRight : (i) => {
+        bottomLeft: (i) => {
             let five = neutralZones[i] || maxZone
             let arrChanges = []
             let neutralsHouseAround = 0
-            
+
             let around = {
-                two : neutralZones[i - columns],
-                four : neutralZones[i - 1]
+                two: neutralZones[i - columns],
+                six: neutralZones[i + 1]
             }
 
-            for(const property in around){
-                if(around[property]){
+            for (const property in around) {
+                if (around[property]) {
                     neutralsHouseAround++
-                    if(around[property] < five){
+                    if (around[property] < five) {
                         five = around[property]
                         arrChanges.push(five)
-                    } else if(around[property] > five){
+                    } else if (around[property] > five) {
                         arrChanges.push(around[property])
-                    } 
+                    }
                 }
             }
-            if(neutralsHouseAround == 0){maxZone++}
+            if (neutralsHouseAround == 0) { maxZone++ }
             neutralZones[i] = five
-            if(arrChanges.length !== 0){
-                changeZone(five,arrChanges)
+            if (arrChanges.length !== 0) {
+                changeZone(five, arrChanges)
+            }
+        },
+        bottomRight: (i) => {
+            let five = neutralZones[i] || maxZone
+            let arrChanges = []
+            let neutralsHouseAround = 0
+
+            let around = {
+                two: neutralZones[i - columns],
+                four: neutralZones[i - 1]
+            }
+
+            for (const property in around) {
+                if (around[property]) {
+                    neutralsHouseAround++
+                    if (around[property] < five) {
+                        five = around[property]
+                        arrChanges.push(five)
+                    } else if (around[property] > five) {
+                        arrChanges.push(around[property])
+                    }
+                }
+            }
+            if (neutralsHouseAround == 0) { maxZone++ }
+            neutralZones[i] = five
+            if (arrChanges.length !== 0) {
+                changeZone(five, arrChanges)
             }
         }
 
     }
 
-    for(let i = 0; i < size; i++){
-        if(boardObj[i] == ''){
-            if(topIdx.includes(i)){
+    for (let i = 0; i < size; i++) {
+        if (boardObj[i] == '') {
+            if (topIdx.includes(i)) {
                 bordas.top(i)
-            } else if(bottomIdx.includes(i)){
+            } else if (bottomIdx.includes(i)) {
                 bordas.bottom(i)
-            } else if(rightIdx.includes(i)){
+            } else if (rightIdx.includes(i)) {
                 bordas.right(i)
-            } else if(leftIdx.includes(i)){
+            } else if (leftIdx.includes(i)) {
                 bordas.left(i)
-            } else if(cornersIdx.includes(i)){
-                switch (i){
-                    case 0: 
+            } else if (cornersIdx.includes(i)) {
+                switch (i) {
+                    case 0:
                         corners.topLeft(i)
                         break
                     case (columns - 1):
@@ -650,125 +647,127 @@ function checkNeutralZones(){
                 let arrChanges = []
                 let neutralsHouseAround = 0
                 let around = {
-                    two : neutralZones[i - columns],
-                    four : neutralZones[i - 1],
-                    six : neutralZones[i + 1],
-                    eight : neutralZones[i + columns]
+                    two: neutralZones[i - columns],
+                    four: neutralZones[i - 1],
+                    six: neutralZones[i + 1],
+                    eight: neutralZones[i + columns]
                 }
 
-                for(const property in around){
-                    if(around[property]){
-                        if(around[property] < five){
+                for (const property in around) {
+                    if (around[property]) {
+                        if (around[property] < five) {
                             five = around[property]
                             arrChanges.push(five)
                             neutralsHouseAround++
-                        } else if(around[property] > five){
+                        } else if (around[property] > five) {
                             arrChanges.push(around[property])
-                        } 
+                        }
                     }
                 }
-                if(neutralsHouseAround == 0){maxZone++}
+                if (neutralsHouseAround == 0) { maxZone++ }
                 neutralZones[i] = five
 
 
-                if(arrChanges.length !== 0){
-                    changeZone(five,arrChanges)
+                if (arrChanges.length !== 0) {
+                    changeZone(five, arrChanges)
                 }
             }
         }
     }
 }
 
-function changeZone(newZone, oldZones){
-    for(const property in neutralZones){
-        if(oldZones.includes(neutralZones[property])){
-            neutralZones[property] = newZone   
+function changeZone(newZone, oldZones) {
+    for (const property in neutralZones) {
+        if (oldZones.includes(neutralZones[property])) {
+            neutralZones[property] = newZone
         }
     }
 }
 
-function checkNearNeutralArea(area){
+function checkNearNeutralArea(area) {
 
     bombsIndicators.forEach(el => {
-        if(el % columns == 0){
+        if (el % columns == 0) {
             let around = {
-                two : neutralZones[el - columns],
+                two: neutralZones[el - columns],
                 three: neutralZones[el - columns + 1],
-                six : neutralZones[el + 1],
-                eight : neutralZones[el + columns],
-                nine : neutralZones[el + columns + 1]
+                six: neutralZones[el + 1],
+                eight: neutralZones[el + columns],
+                nine: neutralZones[el + columns + 1]
             }
 
-            for(const property in around){
-                if(around[property] == area){
+            for (const property in around) {
+                if (around[property] == area) {
                     const elem = document.getElementById(`${el}`)
                     elem.removeAttribute('displaynone')
-                    elem.classList.toggle('open')
+                    elem.classList.add('open')
                 }
             }
 
-        }else if(el % columns == (columns - 1)){
+        } else if (el % columns == (columns - 1)) {
             let around = {
                 one: neutralZones[el - columns - 1],
-                two : neutralZones[el - columns],
-                four : neutralZones[el - 1],
+                two: neutralZones[el - columns],
+                four: neutralZones[el - 1],
                 seven: neutralZones[el + columns - 1],
-                eight : neutralZones[el + columns]
+                eight: neutralZones[el + columns]
             }
 
-            for(const property in around){
-                if(around[property] == area){
+            for (const property in around) {
+                if (around[property] == area) {
                     const elem = document.getElementById(`${el}`)
                     elem.removeAttribute('displaynone')
-                    elem.classList.toggle('open')
+                    elem.classList.add('open')
                 }
             }
 
         } else {
             let around = {
                 one: neutralZones[el - columns - 1],
-                two : neutralZones[el - columns],
+                two: neutralZones[el - columns],
                 three: neutralZones[el - columns + 1],
-                four : neutralZones[el - 1],
-                six : neutralZones[el + 1],
+                four: neutralZones[el - 1],
+                six: neutralZones[el + 1],
                 seven: neutralZones[el + columns - 1],
-                eight : neutralZones[el + columns],
-                nine : neutralZones[el + columns + 1]
+                eight: neutralZones[el + columns],
+                nine: neutralZones[el + columns + 1]
             }
 
-            for(const property in around){
-                if(around[property] == area){
+            for (const property in around) {
+                if (around[property] == area) {
                     const elem = document.getElementById(`${el}`)
                     elem.removeAttribute('displaynone')
-                    elem.classList.toggle('open')
+                    elem.classList.add('open')
                 }
             }
         }
     })
 }
 
-function openArea(area){
+function openArea(area) {
     checkNearNeutralArea(area)
 
     let clearArea = document.querySelectorAll(`[area="${area}"]`)
     clearArea.forEach(el => {
         el.removeAttribute('displaynone')
-        el.classList.toggle('open')
+        el.classList.add('open')
+        
     })
 }
 
-function checkWin(){
-    console.log($signals)
-    console.log($signals.length)
-    console.log($housesOpened)
-    console.log($housesOpened.length)
-    console.log('qtd bombs: ' + qtdBomb)
-    if($housesOpened.length == (size - qtdBomb) && qtdBomb == $signals.length){
+function checkWin() {
+    const houseOpens = document.querySelectorAll('.open').length
+    console.log('here')
+    console.log({
+        size,
+        opens: (houseOpens + qtdBomb)
+    })
+    if (size === (houseOpens + qtdBomb)) {
 
         setTimeout(() => {
-            if(window.confirm('VOCÊ GANHOU!!!')){
-                location.reload()
+            if (window.confirm('VOCÊ GANHOU!!!')) {
+                createBoard()
             }
-        },200)
+        }, 200)
     }
 }
