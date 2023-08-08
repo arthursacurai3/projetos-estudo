@@ -1,38 +1,41 @@
 <!DOCTYPE html>
 <!-- doctype informa ao agente de usuario a versão do html que deve ser renderizada-->
 <html lang="pt-br">
-    <head>
-        <title>Campo minado</title>
-        <meta charset="UTF-8">
-        <meta name="author" content="Arthur">
-        <meta name="description" content="teste Arthur">
-        <meta name="viewport" content="width=device-width,initial-scale=1.0">
-        <meta name="keywords" content="html5, teste, aula">
-        <link rel="stylesheet" href="./campo_minado.css">
-    </head>
-    <body>
-        <form>
-            <fieldset>
-                <legend class="visually-hidden">Pick a color scheme</legend>
-                <input type="radio" name="theme" id="light" />
-                <input type="radio" name="theme" id ="dark" />
-            </fieldset>
-        </form>
-        <h1>Campo minado</h1>
-        <form action="#" class="config" id="choose-size">
-            <select class="inputItem" id="priority" name="priority" >
-                <option value="100">10x10</option>
-                <option value="225">15x15</option>
-                <option value="400">20x20</option>
-            </select>
-            <input id="add-item" type="submit" value="Add">
-        </form>
-        <div class="board-container">
-            <ul class="board">
 
-            </ul>
-        </div>
-    </body>
+<head>
+    <title>Campo minado</title>
+    <meta charset="UTF-8">
+    <meta name="author" content="Arthur">
+    <meta name="description" content="teste Arthur">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="keywords" content="html5, teste, aula">
+    <link rel="stylesheet" href="./campo_minado.css">
+</head>
 
-    <script src="./campo_minado.js"></script>
+<body>
+    <form>
+        <fieldset>
+            <legend class="visually-hidden">Pick a color scheme</legend>
+            <input type="radio" name="theme" id="light" />
+            <input type="radio" name="theme" id="dark" />
+        </fieldset>
+    </form>
+    <h1>Campo minado</h1>
+    <form action="#" class="config" id="choose-size">
+        <select class="inputItem" id="priority" name="priority">
+            <option value="100">10x10</option>
+            <option value="225">15x15</option>
+            <option value="400">20x20</option>
+        </select>
+        <input id="add-item" type="submit" value="Add">
+    </form>
+    <div class="board-container">
+        <ul class="board">
+
+        </ul>
+    </div>
+</body>
+
+<script src="./campo_minado.js"></script>
+
 </html>

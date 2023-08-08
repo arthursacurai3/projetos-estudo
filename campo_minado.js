@@ -37,7 +37,6 @@ if (!savedTheme) {
     applyTheme(savedTheme)
 }
 
-
 $radioBtns.addEventListener('click', e => {
     if (e.target.nodeName == 'INPUT') {
         localStorage.setItem('theme', e.target.getAttribute('id'))
@@ -64,7 +63,7 @@ $board.addEventListener('click', e => {
     console.log(elem)
     if (elem.getAttribute('bomb') == '') {
         elem.removeAttribute('displaynone')
-
+        elem.setAttribute('style','background-color: red;')
         setTimeout(() => {
             if (window.confirm('VOCÊ PERDEU!!!')) {
                 createBoard()
@@ -85,10 +84,14 @@ $board.addEventListener('click', e => {
 })
 
 $board.addEventListener('contextmenu', e => {
-    e.target.classList.toggle('signal')
     e.preventDefault()
+    markAsBomb(e.target)
     checkWin()
 })
+
+function markAsBomb(_this){
+    _this.classList.toggle('signal')
+}
 
 function createBoard() {
     size = parseInt($size.value)

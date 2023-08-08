@@ -1,3 +1,7 @@
+body {
+    width: 100%;
+}
+
 fieldset{
     display: flex;
     gap: 50px;
@@ -68,25 +72,26 @@ form{
 li{
     position: relative;
     list-style: none;
-    width: 40px;
-    height: 40px;
+    width: min(40px, 8vw);
+    height: min(40px, 8vw);
     display: flex;
     justify-content: center;
     text-align: center;
     align-items: center;
     border: 1px solid gray;
+    box-sizing: border-box;
 }
 
 .neutral{
     background-color: lightgrey;
 }
 
-[bomb='']{
-    background-color: var(--clr-bomb-bg);
+.board-container{
+    margin: 5vh 0;
 }
 
-.board-container{
-    margin: 5vh;
+.board {
+    padding: 0;
 }
 
 li[displaynone='']::before{
